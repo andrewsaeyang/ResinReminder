@@ -6,10 +6,18 @@
 //
 
 import UIKit
+import UserNotifications
 
 class ViewController: UIViewController {
+    // MARK: - Properties
     let shapeLayer = CAShapeLayer()
 
+    
+    // MARK: - Outlets
+    
+    
+    
+    // MARK: - Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -82,5 +90,45 @@ class ViewController: UIViewController {
         
     }
     
+    // MARK: - Actions
+    
+    /*These are test functions below
+     *
+     */
+    @IBAction func buttonTapped(_ sender: Any) {
+        fireNotificationNow(1)
+    }
+    
+    @IBAction func fiveSeconds(_ sender: Any) {
+        fireNotificationNow(5)
+
+    }
+    
 
 }// End of class
+
+
+extension ViewController {
+    
+    /*These are Test functions below
+     *
+     */
+    func fireNotificationNow(_ seconds: Double) {
+        let content = UNMutableNotificationContent()
+        content.title = "Test Notification"
+        content.body = "A button has been tapped"
+        content.sound = .default
+        content.userInfo = [ "Tapped" : "identifier" ]
+        content.categoryIdentifier = "ButtonReminderCategoryIdentifier"
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
+        
+        let request = UNNotificationRequest(identifier: "identifier", content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { (error) in
+            if let error = error{
+                print("Unable to add notification request, \(error.localizedDescription)")
+            }
+        }
+    }
+}
