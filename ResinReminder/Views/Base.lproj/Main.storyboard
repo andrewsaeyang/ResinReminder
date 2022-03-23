@@ -17,7 +17,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="eek-mO-Jc6">
-                                <rect key="frame" x="103" y="772" width="208" height="60"/>
+                                <rect key="frame" x="103" y="94" width="208" height="60"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FUo-Rb-FNy">
                                         <rect key="frame" x="0.0" y="0.0" width="100" height="60"/>
@@ -26,9 +26,9 @@
                                             <constraint firstAttribute="width" constant="100" id="vwv-G4-O63"/>
                                         </constraints>
                                         <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="plain" title="Notify Now"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="Reset"/>
                                         <connections>
-                                            <action selector="buttonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="zH2-Yg-Sht"/>
+                                            <action selector="resetButtonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="hHH-aa-bAT"/>
                                         </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9FI-Yz-229">
@@ -38,10 +38,9 @@
                                             <constraint firstAttribute="width" constant="100" id="WUF-Ej-SIx"/>
                                         </constraints>
                                         <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="plain" title="5 seconds"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="START"/>
                                         <connections>
-                                            <action selector="buttonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="NfM-fw-0TB"/>
-                                            <action selector="fiveSeconds:" destination="BYZ-38-t0r" eventType="touchUpInside" id="eIl-zk-nqI"/>
+                                            <action selector="startStopAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="1mt-Tw-O2Z"/>
                                         </connections>
                                     </button>
                                 </subviews>
@@ -51,9 +50,13 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="eek-mO-Jc6" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="5vx-NK-umg"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="eek-mO-Jc6" secondAttribute="bottom" constant="30" id="7gc-nc-B0O"/>
+                            <constraint firstItem="eek-mO-Jc6" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="50" id="v7M-yc-31Z"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="notifyNowButton" destination="FUo-Rb-FNy" id="otj-sI-KNd"/>
+                        <outlet property="startStopButton" destination="9FI-Yz-229" id="M4T-8g-wm3"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
