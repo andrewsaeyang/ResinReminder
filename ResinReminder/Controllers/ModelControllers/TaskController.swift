@@ -10,7 +10,7 @@ class TaskController {
     
     // MARK: - Properties
     static let shared = TaskController()
-    var task = Task(currentResin: 0, resinCap: 160)
+    var task = Task(currentResin: 150, resinCap: 160)
     
     
     // MARK: - CRUD Functions

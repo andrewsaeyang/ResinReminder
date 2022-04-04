@@ -12,7 +12,7 @@ class Task{
     var resinCap: Int
     var refreshRate: Int
     
-    init(currentResin: Int, resinCap: Int, refreshRate: Int = 8) {
+    init(currentResin: Int, resinCap: Int, refreshRate: Int = 1) {
         self.currentResin = currentResin
         self.resinCap = resinCap
         self.refreshRate = refreshRate
