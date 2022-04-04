@@ -9,6 +9,7 @@ import UIKit
 import UserNotifications
 
 class ViewController: UIViewController {
+    
     // MARK: - Properties
     var safeArea: UILayoutGuide {
         return self.view.safeAreaLayoutGuide
@@ -18,25 +19,28 @@ class ViewController: UIViewController {
     
     var currentResin = 0
     var resinCap = 0
-    var resinPerTick = 0
+    var resinPerTick = 1
     
     
-    //Timer
     var timerCounting: Bool = false
     var startTime: Date?
     var stopTime: Date?
+    var endTime: Date?
     
+    // MARK: - Outlets
+    
+    @IBOutlet weak var notifyNowButton: UIButton!
+    @IBOutlet weak var startStopButton: UIButton!
+    
+    // MARK: - User Defaults
     let userDefaults = UserDefaults.standard
     let START_TIME_KEY = "startTime"
     let STOP_TIME_KEY = "stopTime"
     let COUNTING_KEY = "countingKey"
+    let END_TIME_KEY = "endTime"
+    let CURRENT_RESIN_KEY = "currentResinKey"
     
     var scheduledTimer: Timer!
-    
-    
-    
-    
-    // MARK: - Timer Test
     
     func setStartTime(date: Date?){
         startTime = date
@@ -46,50 +50,50 @@ class ViewController: UIViewController {
     func setStopTime(date: Date?){
         stopTime = date
         userDefaults.set(stopTime, forKey: STOP_TIME_KEY)
-        
     }
     
     func setTimerCounting(_ val: Bool){
         timerCounting = val
         userDefaults.set(timerCounting, forKey: COUNTING_KEY)
-        
     }
     
+    func setEndTime(date: Date?){
+        endTime = date
+        userDefaults.set(endTime, forKey: END_TIME_KEY)
+    }
     
-    // MARK: - Outlets
- 
-    @IBOutlet weak var notifyNowButton: UIButton!
-    @IBOutlet weak var startStopButton: UIButton!
-    
+    func setCurrentResin(resin: Int){
+        userDefaults.set(resin, forKey: CURRENT_RESIN_KEY)
+    }
     
     // MARK: - Life Cycles
-    override func loadView() {
-        super.loadView()
-        
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        currentResin = TaskController.shared.task.currentResin
         resinCap = TaskController.shared.task.resinCap
         resinPerTick = TaskController.shared.task.refreshRate
-        
         
         addAllSubViews()
         setupCurrentResinLabel()
         setupResinCapLabel()
         setupTimerLabel()
+        setupCurrentResinTextField()
         
         setupProgressBar()
         
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
         
+        setTimeLabel((resinCap - currentResin))
         
         
-        // MARK: - TIMER
+        
+        // MARK: - User Defaults
         startTime = userDefaults.object(forKey: START_TIME_KEY) as? Date
         stopTime = userDefaults.object(forKey: STOP_TIME_KEY) as? Date
+        endTime = userDefaults.object(forKey: END_TIME_KEY) as? Date
         timerCounting = userDefaults.bool(forKey: COUNTING_KEY)
+        
+        currentResin = userDefaults.object(forKey: CURRENT_RESIN_KEY) as? Int ?? 0
+        currentResinLabel.text = "Current Resin: \(currentResin)"
         
         if timerCounting {
             startTimer()
@@ -97,13 +101,12 @@ class ViewController: UIViewController {
             stopTimer()
             if let start = startTime {
                 if let stop = stopTime {
-                    let time = calcRestartTime(start: start, stop: stop)
+                    let time = calcRestartTime(end: start, stop: stop)
                     let diff = Date().timeIntervalSince(time)
                     setTimeLabel(Int(diff) )
                 }
             }
         }
-        
         
     }
     
@@ -112,7 +115,7 @@ class ViewController: UIViewController {
         let basicAnimation = CABasicAnimation(keyPath: "strokeEnd")
         
         basicAnimation.toValue = 1
-        basicAnimation.duration = CFTimeInterval((resinCap - currentResin) * resinPerTick) * 60
+        basicAnimation.duration = CFTimeInterval((resinCap - currentResin) * resinPerTick)
         
         print("\(basicAnimation.duration/60)minutes and \(basicAnimation.duration.truncatingRemainder(dividingBy: 60)) until full")
         
@@ -128,6 +131,7 @@ class ViewController: UIViewController {
         self.view.addSubview(currentResinLabel)
         self.view.addSubview(resinCapLabel)
         self.view.addSubview(timerLabel)
+        self.view.addSubview(currentResinTextField)
     }
     
     
@@ -156,6 +160,16 @@ class ViewController: UIViewController {
         timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
     }
     
+    func setupCurrentResinTextField() {
+        currentResinTextField.anchor(top: currentResinLabel.bottomAnchor, bottom: nil, leading: self.safeArea.leadingAnchor, trailing: nil, paddingTop: 0, paddingBottom: 0, paddingLeft: 16, paddingRight: 0)
+        
+    }
+    
+    func setResinFromText(){
+        let resin: Int = value(forKey: currentResinTextField.text!) as! Int
+        currentResin = resin
+    }
+    
     // MARK: - Views
     let textLayer1: CATextLayer = {
         let textLayer = CATextLayer()
@@ -169,7 +183,6 @@ class ViewController: UIViewController {
     
     let currentResinLabel: UILabel = {
         let resin = UILabel()
-        resin.text = String(TaskController.shared.task.currentResin)
         return resin
     }()
     
@@ -185,7 +198,11 @@ class ViewController: UIViewController {
         return label
     }()
     
-    
+    let currentResinTextField: UITextField = {
+        let textfield = UITextField()
+        textfield.placeholder = "0"
+        return textfield
+    }()
     
     // MARK: - Progress Bar
     
@@ -243,18 +260,18 @@ class ViewController: UIViewController {
         
     }
     
-    
-
     /*These are Test functions below
      *
      */
     
-    //reset Action
-    
+    // MARK: - Actions
     @IBAction func resetButtonTapped(_ sender: Any) {
         //fireNotificationNow(1)
         setStopTime(date: nil)
         setStartTime(date: nil)
+        setEndTime(date: nil)
+        
+        
         timerLabel.text = makeTimeString(hour:0, min: 0, sec: 0)
         stopTimer()
     }
@@ -264,23 +281,58 @@ class ViewController: UIViewController {
             setStopTime(date: Date())
             stopTimer()
         } else {
-            if let stop = stopTime {
-                let restartTime = calcRestartTime(start: startTime!, stop: stop)
-                setStopTime(date: nil)
-                setStartTime(date: restartTime)
-            } else {
+            currentResin = Int(currentResinTextField.text!) ?? -1
+            if isResinInRange(){
                 setStartTime(date: Date())
+                calcResinTime()
+                startTimer()
+                
+                
+                currentResinLabel.text = "Current Resin: \(currentResin)"
+                
+                let diff = endTime!.timeIntervalSince(Date())
+                setTimeLabel(Int(diff))
+            } else {
+                print("🛑 Resin is out of range")
             }
-            startTimer()
         }
+    }
+    
+    // TODO: This check isnt set to source of truth
+    func isResinInRange() -> Bool{
+        if TaskController.shared.task.currentResin >= 0 && TaskController.shared.task.currentResin <= 160 {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    func calcResinTime() {
+        guard let currentResin = currentResinTextField.text else { return }
+        
+        let now = Date()
+        let resinFromText = (Int(currentResin) ?? 22)
+        let timeToFullResin = resinCap - resinFromText
+        
+        TaskController.shared.task.currentResin = resinFromText
+        
+        
+        
+        print("Right now it is: \(now)")
+        let endTime = Calendar.current.date(byAdding: .second, value: timeToFullResin, to: now)
+        print("Resin full at: \(endTime!)")
+        
+        setEndTime(date: endTime)
+    }
+    
+    func calcRestartTime(end: Date, stop: Date) -> Date {
+        let diff = end.timeIntervalSince(stop)
+        print(diff)
+        return endTime!.addingTimeInterval(diff)
         
     }
-    func calcRestartTime(start: Date, stop: Date) -> Date {
-        let diff = start.timeIntervalSince(stop)
-        return Date().addingTimeInterval(diff)
-    }
     func startTimer() {
-        scheduledTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(refreshValue), userInfo: nil, repeats: true)
+        scheduledTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(refreshValue), userInfo: nil, repeats: true)
         setTimerCounting(true)
         startStopButton.setTitle("STOP", for: .normal)
         startStopButton.setTitleColor(UIColor.red, for: .normal )
@@ -293,15 +345,30 @@ class ViewController: UIViewController {
         setTimerCounting(false)
         startStopButton.setTitle("START", for: .normal)
     }
+    
     @objc func refreshValue(){
-        if let start = startTime{
-            let diff = Date().timeIntervalSince(start)
+        if let end = endTime{
+            
+            // let diff = Date().timeIntervalSince(end)
+            let diff = end.timeIntervalSince(Date())
             setTimeLabel(Int(diff))
+            
+            TaskController.shared.task.currentResin += 1
+            currentResinTextField.text = "\(TaskController.shared.task.currentResin)"
+            
+            if Int(diff) == 0 {
+                fireNotificationNow(1)
+                setStopTime(date: Date())
+                stopTimer()
+            }
+            
         } else {
+            
             stopTimer()
             setTimeLabel(0)
         }
     }
+    
     func setTimeLabel(_ val: Int){
         let time = secondsToHoursMinuitesSeconds(val)
         let timeString = makeTimeString(hour: time.0, min: time.1, sec: time.2)
@@ -324,12 +391,7 @@ class ViewController: UIViewController {
         return timeString
     }
     
-    
-    
-    
-    
-    
-    
+    //notifications
     func fireNotificationNow(_ seconds: Double) {
         let content = UNMutableNotificationContent()
         content.title = "TIME TO GRIND BETCH"
@@ -348,8 +410,6 @@ class ViewController: UIViewController {
             }
         }
     }
-    
-    
     
 }// End of class
 
